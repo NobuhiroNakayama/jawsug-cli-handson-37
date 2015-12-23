@@ -95,22 +95,26 @@ aws codecommit get-repository --repository-name ${REPONAME}
 
 ## キーペアの作成
 
-sshキーを作成
+sshキーの名前を設定
 
 ```
-cd ~
-mkdir .ssh
-cd .ssh
+SSHKEYNAME='id_rsa'
+```
 
-ssh-keygen -t rsa -b 2048 -f codecommit2
+sshキーを作成
+（パスワードの設定は任意）
+
+```
+cd ~/.ssh
+ssh-keygen -t rsa -b 2048 -f ${SSHKEYNAME}
 ```
 
 ```
 Generating public/private rsa key pair.
 Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
-Your identification has been saved in codecommit.
-Your public key has been saved in codecommit.pub.
+Your identification has been saved in /home/ec2-user/.ssh/id_rsa.
+Your public key has been saved in /home/ec2-user/.ssh/id_rsa.pub.
 The key fingerprint is:
 **:**:**:**:**:**:**:**:**:**:**:**:**:**:**:** ec2-user@ip-172-31-13-173
 The key's randomart image is:
@@ -134,11 +138,12 @@ ls -al
 ```
 
 ```
-total 16
-drwxrwxr-x 2 ec2-user ec2-user 4096 Dec 21 09:51 .
-drwx------ 8 ec2-user ec2-user 4096 Dec 21 09:51 ..
--rw------- 1 ec2-user ec2-user 1766 Dec 21 09:51 codecommit
--rw-r--r-- 1 ec2-user ec2-user  407 Dec 21 09:51 codecommit.pub
+total 24
+drwx------ 2 ec2-user ec2-user 4096 Dec 23 14:20 .
+drwx------ 8 ec2-user ec2-user 4096 Dec 21 10:30 ..
+-rw------- 1 ec2-user ec2-user  391 Nov 17 07:12 authorized_keys
+-rw------- 1 ec2-user ec2-user 1679 Dec 23 14:20 id_rsa
+-rw-r--r-- 1 ec2-user ec2-user  407 Dec 23 14:20 id_rsa.pub
 ```
 
 ## IAMユーザの作成
@@ -180,7 +185,7 @@ aws iam create-user --user-name ${GITUSER}
 公開鍵をアップロードします。
 
 ```
-aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file://codecommit.pub
+aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file://${SSHKEYNAME}
 ```
 
 ```
@@ -210,14 +215,45 @@ echo ${SSHPUBID}
 cat << EOF > ~/.ssh/config
 Host git-codecommit.*.amazonaws.com
   User ${SSHPUBID}
-  IdentityFile ~/.ssh/codecommit
+  IdentityFile ~/.ssh/${SSHKEYNAME}
 EOF
+```
+
+認証情報の設定ファイルを確認
+
+```
+ls -al config
+```
+
+```
+-rw-rw-r-- 1 ec2-user ec2-user   93 Dec 23 14:49 config
+```
+
+設定ファイルのパーミッションを変更
+
+```
+chmod 600 config
+```
+
+設定ファイルのパーミッションを確認
+
+```
+ls -al config
+```
+
+```
+-rw------- 1 ec2-user ec2-user 93 Dec 23 14:49 config
 ```
 
 接続確認
 
 ```
-sudo ssh git-codecommit.us-east-1.amazonaws.com
+ssh git-codecommit.us-east-1.amazonaws.com
+```
+
+```
+You have successfully authenticated over SSH. You can use Git to interact with AWS CodeCommit. Interactive shells are not supported.Connection to git-codecommit.us-east-1.amazonaws.com closed by remote host.
+Connection to git-codecommit.us-east-1.amazonaws.com closed.
 ```
 
 # ローカルリポジトリの作成
