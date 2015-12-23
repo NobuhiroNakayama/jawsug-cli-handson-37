@@ -256,12 +256,161 @@ You have successfully authenticated over SSH. You can use Git to interact with A
 Connection to git-codecommit.us-east-1.amazonaws.com closed.
 ```
 
-# ローカルリポジトリの作成
+# Gitをインストール
 
-フォルダを作成します
+インストール
+
+```
+sudo yum install git -y
+```
+
+```
+Loaded plugins: priorities, update-motd, upgrade-helper
+amzn-main/latest                                         | 2.1 kB     00:00
+amzn-updates/latest                                      | 2.3 kB     00:00
+Resolving Dependencies
+--> Running transaction check
+---> Package git.x86_64 0:2.4.3-7.42.amzn1 will be installed
+--> Processing Dependency: perl-Git = 2.4.3-7.42.amzn1 for package: git-2.4.3-7.42.amzn1.x86_64
+--> Processing Dependency: perl(Term::ReadKey) for package: git-2.4.3-7.42.amzn1.x86_64
+--> Processing Dependency: perl(Git) for package: git-2.4.3-7.42.amzn1.x86_64
+--> Processing Dependency: perl(Error) for package: git-2.4.3-7.42.amzn1.x86_64
+--> Running transaction check
+---> Package perl-Error.noarch 1:0.17020-2.9.amzn1 will be installed
+---> Package perl-Git.noarch 0:2.4.3-7.42.amzn1 will be installed
+---> Package perl-TermReadKey.x86_64 0:2.30-20.9.amzn1 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package              Arch       Version                 Repository        Size
+================================================================================
+Installing:
+ git                  x86_64     2.4.3-7.42.amzn1        amzn-updates     9.8 M
+Installing for dependencies:
+ perl-Error           noarch     1:0.17020-2.9.amzn1     amzn-main         33 k
+ perl-Git             noarch     2.4.3-7.42.amzn1        amzn-updates      61 k
+ perl-TermReadKey     x86_64     2.30-20.9.amzn1         amzn-main         33 k
+
+Transaction Summary
+================================================================================
+Install  1 Package (+3 Dependent packages)
+
+Total download size: 10 M
+Installed size: 24 M
+Downloading packages:
+(1/4): git-2.4.3-7.42.amzn1.x86_64.rpm                   | 9.8 MB     00:00
+(2/4): perl-Error-0.17020-2.9.amzn1.noarch.rpm           |  33 kB     00:00
+(3/4): perl-Git-2.4.3-7.42.amzn1.noarch.rpm              |  61 kB     00:00
+(4/4): perl-TermReadKey-2.30-20.9.amzn1.x86_64.rpm       |  33 kB     00:00
+--------------------------------------------------------------------------------
+Total                                               25 MB/s |  10 MB  00:00
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : 1:perl-Error-0.17020-2.9.amzn1.noarch                        1/4
+  Installing : perl-TermReadKey-2.30-20.9.amzn1.x86_64                      2/4
+  Installing : perl-Git-2.4.3-7.42.amzn1.noarch                             3/4
+  Installing : git-2.4.3-7.42.amzn1.x86_64                                  4/4
+  Verifying  : git-2.4.3-7.42.amzn1.x86_64                                  1/4
+  Verifying  : 1:perl-Error-0.17020-2.9.amzn1.noarch                        2/4
+  Verifying  : perl-Git-2.4.3-7.42.amzn1.noarch                             3/4
+  Verifying  : perl-TermReadKey-2.30-20.9.amzn1.x86_64                      4/4
+
+Installed:
+  git.x86_64 0:2.4.3-7.42.amzn1
+
+Dependency Installed:
+  perl-Error.noarch 1:0.17020-2.9.amzn1      perl-Git.noarch 0:2.4.3-7.42.amzn1
+  perl-TermReadKey.x86_64 0:2.30-20.9.amzn1
+
+Complete!
+```
+
+Gitのバージョンを確認
+
+```
+git --version
+```
+
+```
+git version 2.4.3
+```
+
+# リポジトリのクローン
+
+URL(SSH)を確認
+
+```
+SSHURL=`aws codecommit get-repository --repository-name MyDemoRepo | jq -r .repositoryMetadata.cloneUrlSsh`
+
+echo ${SSHURL}
+```
+
+リポジトリをクローン
 
 ```
 cd ~
-mkdir temprepo
-cd temprepo
+
+git clone ${SSHURL} ${REPONAME}
+```
+
+# リポジトリの変更
+
+ファイルを作成
+
+```
+touch codecommit.txt
+```
+
+ファイルを追加
+
+```
+git add .
+```
+
+# 変更をコミット
+
+コミット
+
+```
+git commit -m "First Commit"
+```
+
+```
+[master (root-commit) cd4123c] First Commit
+ Committer: EC2 Default User <ec2-user@ip-172-31-13-173.ap-northeast-1.compute.internal>
+Your name and email address were configured automatically based
+on your username and hostname. Please check that they are accurate.
+You can suppress this message by setting them explicitly. Run the
+following command and follow the instructions in your editor to edit
+your configuration file:
+
+    git config --global --edit
+
+After doing this, you may fix the identity used for this commit with:
+
+    git commit --amend --reset-author
+
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 codecommit.txt
+```
+
+# 変更をプッシュ
+
+コミットしたコンテンツをプッシュ
+
+```
+git push origin master
+```
+
+```
+Counting objects: 3, done.
+Writing objects: 100% (3/3), 249 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+remote:
+To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
+ * [new branch]      master -> master
 ```
