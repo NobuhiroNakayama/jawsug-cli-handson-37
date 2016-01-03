@@ -1,4 +1,13 @@
-まだまだ書きかけです。。。
+ひと通り書けたと思います。
+
+# 前提条件
+
+## 権限
+
+ハンズオンは以下の権限を付与されたユーザ（もしくはロール）で実行してください。
+
+- CodeCommitに関するフルコントロール権限
+- IAMに関するフルコントロール権限
 
 # 事前準備
 
@@ -24,10 +33,17 @@ REPODESC='My demonstration repository'
 ```
 cat << ETX
 
-   repository-name: '${REPONAME}'
-   repository-description: '${REPODESC}'
+   repository-name: ${REPONAME}
+   repository-description: ${REPODESC}
 
 ETX
+```
+
+```
+
+   repository-name: MyDemoRepo
+   repository-description: My demonstration repository
+
 ```
 
 リポジトリを作成します。
@@ -63,7 +79,7 @@ aws codecommit list-repositories
     "repositories": [
         {
             "repositoryName": "MyDemoRepo",
-            "repositoryId": "6a43da82-fa01-4bf3-b2ed-ca4f7fe179b1"
+            "repositoryId": "********-****-****-****-************"
         }
     ]
 }
@@ -99,6 +115,24 @@ sshキーの名前を設定
 
 ```
 SSHKEYNAME='id_rsa'
+```
+
+sshキーの名前を確認
+
+```
+cat << ETX
+
+   secretkey-name: ~/.ssh/${SSHKEYNAME}
+   publickey-name: ~/.ssh/${SSHKEYNAME}.pub
+
+ETX
+```
+
+```
+
+   secretkey-name: ~/.ssh/id_rsa
+   publickey-name: ~/.ssh/id_rsa.pub
+
 ```
 
 sshキーを作成
@@ -159,9 +193,25 @@ GITUSER='git-user'
 ```
 cat << ETX
 
-   repository-name: '${GITUSER}'
+   iam-user-name: ${GITUSER}
 
 ETX
+```
+
+```
+
+   iam-user-name: git-user
+
+```
+
+同じ名前のユーザがいないことを確認します
+
+```
+aws iam get-user --user-name ${GITUSER}
+```
+
+```
+A client error (NoSuchEntity) occurred when calling the GetUser operation: The user with name git-user cannot be found.
 ```
 
 IAMユーザを作成します
@@ -182,10 +232,12 @@ aws iam create-user --user-name ${GITUSER}
 }
 ```
 
+## 公開鍵をアップロード
+
 公開鍵をアップロードします。
 
 ```
-aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file://${SSHKEYNAME}
+aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file://${SSHKEYNAME}.pub
 ```
 
 ```
@@ -193,7 +245,7 @@ aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file:
     "SSHPublicKey": {
         "UserName": "git-user",
         "Status": "Active",
-        "SSHPublicKeyBody": "ssh-rsa **************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************** ec2-user@ip-172-31-13-173\n",
+        "SSHPublicKeyBody": "ssh-rsa **************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************** ec2-user@ip-172-***-***-***\n",
         "UploadDate": "2015-12-21T10:10:54.908Z",
         "Fingerprint": "**:**:**:**:**:**:**:**:**:**:**:**:**:**:**:**",
         "SSHPublicKeyId": "********************"
@@ -201,15 +253,47 @@ aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file:
 }
 ```
 
+確認
+
+```
+aws iam list-ssh-public-keys --user-name ${GITUSER}
+```
+
+```
+{
+    "SSHPublicKeys": [
+        {
+            "UserName": "git-user",
+            "Status": "Active",
+            "SSHPublicKeyId": "********************",
+            "UploadDate": "2016-01-03T07:56:21Z"
+        }
+    ],
+    "IsTruncated": false
+}
+```
+
+## 認証情報の設定（SSH接続の場合）
+
 公開鍵のIDを取得
 
 ```
 SSHPUBID=`aws iam list-ssh-public-keys --user-name ${GITUSER} | jq .SSHPublicKeys | jq -r .[].SSHPublicKeyId`
 
-echo ${SSHPUBID}
+cat << ETX
+
+   SSHPublicKeyId: ${SSHPUBID}
+
+ETX
 ```
 
-認証情報の設定
+```
+
+   SSHPublicKeyId: ********************
+
+```
+
+設定ファイルを作成
 
 ```
 cat << EOF > ~/.ssh/config
@@ -217,6 +301,14 @@ Host git-codecommit.*.amazonaws.com
   User ${SSHPUBID}
   IdentityFile ~/.ssh/${SSHKEYNAME}
 EOF
+
+cat ~/.ssh/config
+```
+
+```
+Host git-codecommit.*.amazonaws.com
+  User ********************
+  IdentityFile ~/.ssh/id_rsa
 ```
 
 認証情報の設定ファイルを確認
@@ -251,9 +343,67 @@ ls -al config
 ssh git-codecommit.us-east-1.amazonaws.com
 ```
 
+yesを入力
+
 ```
+The authenticity of host 'git-codecommit.us-east-1.amazonaws.com (72.21.203.185)' can't be established.
+RSA key fingerprint is a6:9c:7d:bc:35:f5:d4:5f:8b:ba:6f:c8:bc:d4:83:84.
+Are you sure you want to continue connecting (yes/no)?
+```
+
+```
+Warning: Permanently added 'git-codecommit.us-east-1.amazonaws.com,72.21.203.185' (RSA) to the list of known hosts.
 You have successfully authenticated over SSH. You can use Git to interact with AWS CodeCommit. Interactive shells are not supported.Connection to git-codecommit.us-east-1.amazonaws.com closed by remote host.
 Connection to git-codecommit.us-east-1.amazonaws.com closed.
+```
+
+## 権限を付与
+
+マネージドポリシーのARNを決定
+
+```
+ARN="arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
+```
+
+ARNを確認
+
+```
+cat << ETX
+
+   iam-user-name: ${GITUSER}
+   ManagedPolicyARN: ${ARN}
+
+ETX
+```
+
+```
+
+   iam-user-name: git-user
+   ManagedPolicyARN: arn:aws:iam::aws:policy/AWSCodeCommitPowerUser
+
+```
+
+マネージドポリシーをアタッチ
+
+```
+aws iam attach-user-policy --user-name ${GITUSER} --policy-arn ${ARN}
+```
+
+ポリシーがアタッチされたことを確認
+
+```
+aws iam list-attached-user-policies --user-name ${GITUSER}
+```
+
+```
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AWSCodeCommitPowerUser",
+            "PolicyArn": "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
+        }
+    ]
+}
 ```
 
 # Gitをインストール
@@ -345,7 +495,25 @@ git version 2.4.3
 
 ```
 MYNAME=user01
-MYEMAIL=user01@example.com
+EMAIL=user01@example.com
+```
+
+確認
+
+```
+cat << ETX
+
+   name: ${MYNAME}
+   e-mail: ${EMAIL}
+
+ETX
+```
+
+```
+
+   name: user01
+   e-mail: user01@example.com
+
 ```
 
 ユーザ名とメールアドレスを設定
@@ -355,24 +523,38 @@ git config --global user.name "${MYNAME}"
 git config --global user.email "${MYEMAIL}"
 ```
 
-# リポジトリのクローン
-
-URL(SSH)を確認
+確認
 
 ```
-SSHURL=`aws codecommit get-repository --repository-name MyDemoRepo | jq -r .repositoryMetadata.cloneUrlSsh`
-
-echo ${SSHURL}
+git config --get user.name
+git config --get user.email
 ```
 
-リポジトリをクローン
+```
+user01
+user01@example.com
+```
+
+# ローカルリポジトリの作成
+
+## ディレクトリの作成
+
+ディレクトリの作成
 
 ```
 cd ~
-
-git clone ${SSHURL} ${REPONAME}
-
+mkdir ${REPONAME}
 cd ${REPONAME}
+```
+
+## 初期化
+
+```
+git init
+```
+
+```
+Initialized empty Git repository in /home/ec2-user/MyDemoRepo/.git/
 ```
 
 # インデックスの状態を確認
@@ -381,43 +563,46 @@ cd ${REPONAME}
 git status
 ```
 
-# リポジトリの変更
+```
+On branch master
+
+Initial commit
+
+nothing to commit (create/copy files and use "git add" to track)
+```
+
+# マスターブランチの変更
+
+## コンテンツを追加
+
+ファイル名を決定
+
+```
+FILENAME=codecommit.txt
+```
 
 ファイルを作成
 
 ```
-touch codecommit.txt
+touch ${FILENAME}
 ```
 
 ファイルを追加
 
 ```
-git add codecommit.txt
+git add ${FILENAME}
 ```
 
-# 変更をコミット
+## 変更をコミット
 
 コミット
 
 ```
-git commit -m "touch codecommit.txt"
+git commit -m "create ${FILENAME}"
 ```
 
 ```
-[master (root-commit) cd4123c] First Commit
- Committer: EC2 Default User <ec2-user@ip-172-31-13-173.ap-northeast-1.compute.internal>
-Your name and email address were configured automatically based
-on your username and hostname. Please check that they are accurate.
-You can suppress this message by setting them explicitly. Run the
-following command and follow the instructions in your editor to edit
-your configuration file:
-
-    git config --global --edit
-
-After doing this, you may fix the identity used for this commit with:
-
-    git commit --amend --reset-author
-
+[master (root-commit) 0fd2151] create codecommit.txt
  1 file changed, 0 insertions(+), 0 deletions(-)
  create mode 100644 codecommit.txt
 ```
@@ -430,6 +615,45 @@ git log
 
 # 変更をプッシュ
 
+プッシュ前の状態を確認（リポジトリは空の状態）
+
+```
+aws codecommit get-branch --repository-name ${REPONAME} --branch-name  master
+```
+
+```
+A client error (BranchDoesNotExistException) occurred when calling the GetBranch operation: None
+```
+
+URL(SSH)を確認
+
+```
+SSHURL=`aws codecommit get-repository --repository-name MyDemoRepo | jq -r .repositoryMetadata.cloneUrlSsh`
+
+echo ${SSHURL}
+```
+
+```
+ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
+```
+
+リモートリポジトリを設定
+
+```
+git remote add origin ${SSHURL}
+```
+
+確認
+
+```
+git remote -v
+```
+
+```
+origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo (fetch)
+origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo (push)
+```
+
 コミットしたコンテンツをプッシュ
 
 ```
@@ -438,35 +662,98 @@ git push origin master
 
 ```
 Counting objects: 3, done.
-Writing objects: 100% (3/3), 249 bytes | 0 bytes/s, done.
+Writing objects: 100% (3/3), 216 bytes | 0 bytes/s, done.
 Total 3 (delta 0), reused 0 (delta 0)
 remote:
 To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
  * [new branch]      master -> master
 ```
 
+プッシュ後の状態を確認
+
+```
+aws codecommit get-branch --repository-name ${REPONAME} --branch-name  master
+```
+
+```
+{
+    "branch": {
+        "commitId": "****************************************",
+        "branchName": "master"
+    }
+}
+```
+
 # ブランチの作成、コンテンツの変更
 
-## コミットIDの確認
+## ブランチの作成
+
+コミットIDの確認
 
 ```
 COMMITID=`aws codecommit get-branch --repository-name ${REPONAME} --branch-name master | jq  -r .branch.commitId`
-echo ${COMMITID}
 ```
 
-## ブランチの作成
+ブランチ名の決定
 
 ```
 BRANCHNAME="MyNewBranch"
 ```
 
+確認
+
+```
+cat << ETX
+
+   Repository-Name: ${REPONAME}
+   Commit ID: ${COMMITID}
+   Branch Name: ${BRANCHNAME}
+
+ETX
+```
+
+```
+
+   Repository-Name: MyDemoRepo
+   Commit ID: ****************************************
+   Branch Name: MyNewBranch
+
+```
+
+ブランチの作成
+
 ```
 aws codecommit create-branch --repository-name ${REPONAME} --branch-name ${BRANCHNAME} --commit-id ${COMMITID}
 ```
 
+確認
 
+```
+aws codecommit get-branch --repository-name ${REPONAME} --branch-name ${BRANCHNAME}
+```
 
-## ブランチの変更
+```
+{
+    "branch": {
+        "commitId": "****************************************",
+        "branchName": "MyNewBranch"
+    }
+}
+```
+
+リモートリポジトリからローカルリポジトリへ新しいブランチのコンテンツをフェッチ
+
+```
+git fetch origin ${BRANCHNAME}
+```
+
+```
+Warning: Permanently added the RSA host key for IP address '54.239.20.180' to the list of known hosts.
+From ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
+ * branch            MyNewBranch -> FETCH_HEAD
+ * [new branch]      MyNewBranch -> origin/MyNewBranch
+```
+
 
 ブランチのスイッチ
 
@@ -474,33 +761,220 @@ aws codecommit create-branch --repository-name ${REPONAME} --branch-name ${BRANC
 git checkout ${BRANCHNAME}
 ```
 
-確認
+```
+Branch MyNewBranch set up to track remote branch MyNewBranch from origin.
+Switched to a new branch 'MyNewBranch'
+```
+
+確認1
 
 ```
 git branch
+```
+
+```
+* MyNewBranch
+  master
+```
+
+確認2
+
+```
 git status
+```
+
+```
+On branch MyNewBranch
+Your branch is up-to-date with 'origin/MyNewBranch'.
+nothing to commit, working directory clean
+```
+
+## コンテンツの修正
+
+```
+cat << EOF >> ${FILENAME}
+write for new branch
+EOF
+
+cat ${FILENAME}
+```
+
+```
+write for new branch
+```
+
+追加
+
+```
+git add ${FILENAME}
+```
+
+コミット
+
+```
+git commit -m "add new line"
+```
+
+```
+[MyNewBranch 3e121a8] add new line
+ 1 file changed, 1 insertion(+)
 ```
 
 ## マスターブランチへのマージ
 
 ```
 git checkout master
+```
+
+```
+Switched to branch 'master'
+```
+
+確認
+
+```
 git branch
 ```
+
+```
+MyNewBranch
+* master
+```
+
+マージ
 
 ```
 git merge ${BRANCHNAME}
 ```
 
+```
+Updating 0fd2151..3e121a8
+Fast-forward
+ codecommit.txt | 1 +
+ 1 file changed, 1 insertion(+)
+```
+
+確認
+
+```
+git log
+```
+
+```
+commit ****************************************
+Author: user01 <user01@example.com>
+Date:   Sun Jan 3 09:01:28 2016 +0000
+
+    add new line
+
+commit ****************************************
+Author: user01 <user01@example.com>
+Date:   Sun Jan 3 08:22:00 2016 +0000
+
+    create codecommit.txt
+```
+
 ## リモートリポジトリへのプッシュ
 
 ```
-git push origin
+git push origin --all
 ```
+
+```
+Counting objects: 3, done.
+Writing objects: 100% (3/3), 262 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+remote:
+To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
+   0fd2151..3e121a8  master -> master
+   0fd2151..3e121a8  MyNewBranch -> MyNewBranch
+```
+
+確認1
+
+```
+aws codecommit get-branch --repository-name ${REPONAME} --branch-name  master
+```
+
+```
+{
+    "branch": {
+        "commitId": "****************************************",
+        "branchName": "master"
+    }
+}
+```
+
+確認2
+```
+aws codecommit get-branch --repository-name ${REPONAME} --branch-name  ${BRANCHNAME}
+```
+
+```
+{
+    "branch": {
+        "commitId": "****************************************",
+        "branchName": "MyNewBranch"
+    }
+}
+```
+
+# オプション
+
+## clone
+
+後で書く
+
+```
+cd ~
+
+git clone ${SSHURL} ${REPONAME}
+
+cd ${REPONAME}
+```
+
+## revert
+
+後で書く（そもそも可能？）
+
+## reset
+
+後で書く（そもそも可能？）
+
+## rebase
+
+後で書く（そもそも可能？）
+
+## タグの利用
+
+後で書く
+
+## 競合の解決
+
+後で書く
+
 
 # 後始末
 
 ## リモートリポジトリの削除
+
+リポジトリ名の確認
+
+```
+cat << ETX
+
+   Repository-Name: ${REPONAME}
+
+ETX
+```
+
+```
+
+   Repository-Name: MyDemoRepo
+
+```
+
+リポジトリの削除
 
 ```
 aws codecommit delete-repository --repository-name ${REPONAME}
@@ -510,6 +984,16 @@ aws codecommit delete-repository --repository-name ${REPONAME}
 {
     "repositoryId": "********-****-****-****-************"
 }
+```
+
+確認
+
+```
+aws codecommit get-repository --repository-name ${REPONAME}
+```
+
+```
+A client error (RepositoryDoesNotExistException) occurred when calling the GetRepository operation: MyDemoRepo does not exist
 ```
 
 ## ローカルリポジトリの削除
@@ -533,15 +1017,126 @@ rm ~/.ssh/config
 echo ${SSHKEYNAME}
 ```
 
+```
+id_rsa
+```
+
 秘密鍵および公開鍵の名前を削除
 (変数が設定されていることを必ず確認してください！！！)
 
 ```
-rm ~/.ssh/${SSHKEYNAME}*
+rm ~/.ssh/${SSHKEYNAME}
+rm ~/.ssh/${SSHKEYNAME}.pub
+```
+
+確認
+
+```
+ls -al ~/.ssh
+```
+
+```
+total 16
+drwx------ 2 ec2-user ec2-user 4096 Jan  3 10:20 .
+drwx------ 3 ec2-user ec2-user 4096 Jan  3 10:19 ..
+-rw------- 1 ec2-user ec2-user  391 Jan  3 07:38 authorized_keys
+-rw-r--r-- 1 ec2-user ec2-user 1326 Jan  3 08:54 known_hosts
 ```
 
 ## IAMユーザの削除
 
+ユーザ名の確認
+
+```
+cat << ETX
+
+   iam-user-name: ${GITUSER}
+
+ETX
+```
+
+```
+
+   iam-user-name: git-user
+
+```
+
+アタッチされているポリシーの確認
+
+```
+ARN=`aws iam list-attached-user-policies --user-name ${GITUSER} | jq -r .AttachedPolicies[].PolicyArn`
+
+echo ${ARN}
+```
+
+```
+arn:aws:iam::aws:policy/AWSCodeCommitPowerUser
+```
+
+マネージドポリシーの削除
+
+```
+aws iam detach-user-policy --user-name ${GITUSER} --policy-arn ${ARN}
+```
+
+確認
+
+```
+aws iam list-attached-user-policies --user-name ${GITUSER}
+```
+
+```
+{
+    "AttachedPolicies": []
+}
+```
+
+SSH公開鍵IDの確認
+
+```
+SSHKEYID=`aws iam list-ssh-public-keys --user-name ${GITUSER} | jq -r .SSHPublicKeys[].SSHPublicKeyId`
+
+echo ${SSHKEYID}
+```
+
+```
+********************
+```
+
+SSH公開鍵の削除
+
+```
+aws iam delete-ssh-public-key --user-name ${GITUSER} --ssh-public-key-id ${SSHKEYID}
+```
+
+確認
+
+```
+aws iam list-ssh-public-keys --user-name ${GITUSER}
+```
+
+```
+{
+    "SSHPublicKeys": [],
+    "IsTruncated": false
+}
+```
+
+ユーザの削除
+
 ```
 aws iam delete-user --user-name ${GITUSER}
 ```
+
+確認
+
+```
+aws iam get-user --user-name ${GITUSER}
+```
+
+```
+A client error (NoSuchEntity) occurred when calling the GetUser operation: The user with name git-user cannot be found.
+```
+
+以上です。
+お疲れ様でした。
