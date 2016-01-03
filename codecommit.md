@@ -339,6 +339,22 @@ git --version
 git version 2.4.3
 ```
 
+# ユーザ名およびメールアドレスの設定
+
+ユーザ名とメールアドレスを変数に設定
+
+```
+MYNAME=user01
+MYEMAIL=user01@example.com
+```
+
+ユーザ名とメールアドレスを設定
+
+```
+git config --global user.name "${MYNAME}"
+git config --global user.email "${MYEMAIL}"
+```
+
 # リポジトリのクローン
 
 URL(SSH)を確認
@@ -355,6 +371,14 @@ echo ${SSHURL}
 cd ~
 
 git clone ${SSHURL} ${REPONAME}
+
+cd ${REPONAME}
+```
+
+# インデックスの状態を確認
+
+```
+git status
 ```
 
 # リポジトリの変更
@@ -368,7 +392,7 @@ touch codecommit.txt
 ファイルを追加
 
 ```
-git add .
+git add codecommit.txt
 ```
 
 # 変更をコミット
@@ -376,7 +400,7 @@ git add .
 コミット
 
 ```
-git commit -m "First Commit"
+git commit -m "touch codecommit.txt"
 ```
 
 ```
@@ -398,6 +422,12 @@ After doing this, you may fix the identity used for this commit with:
  create mode 100644 codecommit.txt
 ```
 
+確認
+
+```
+git log
+```
+
 # 変更をプッシュ
 
 コミットしたコンテンツをプッシュ
@@ -413,4 +443,105 @@ Total 3 (delta 0), reused 0 (delta 0)
 remote:
 To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
  * [new branch]      master -> master
+```
+
+# ブランチの作成、コンテンツの変更
+
+## コミットIDの確認
+
+```
+COMMITID=`aws codecommit get-branch --repository-name ${REPONAME} --branch-name master | jq  -r .branch.commitId`
+echo ${COMMITID}
+```
+
+## ブランチの作成
+
+```
+BRANCHNAME="MyNewBranch"
+```
+
+```
+aws codecommit create-branch --repository-name ${REPONAME} --branch-name ${BRANCHNAME} --commit-id ${COMMITID}
+```
+
+
+
+## ブランチの変更
+
+ブランチのスイッチ
+
+```
+git checkout ${BRANCHNAME}
+```
+
+確認
+
+```
+git branch
+git status
+```
+
+## マスターブランチへのマージ
+
+```
+git checkout master
+git branch
+```
+
+```
+git merge ${BRANCHNAME}
+```
+
+## リモートリポジトリへのプッシュ
+
+```
+git push origin
+```
+
+# 後始末
+
+## リモートリポジトリの削除
+
+```
+aws codecommit delete-repository --repository-name ${REPONAME}
+```
+
+```
+{
+    "repositoryId": "********-****-****-****-************"
+}
+```
+
+## ローカルリポジトリの削除
+
+```
+cd ~
+rm -rf ${REPONAME}
+```
+
+## 資格情報の削除
+
+設定ファイルを確認
+
+```
+rm ~/.ssh/config
+```
+
+秘密鍵および公開鍵の名前を確認
+
+```
+echo ${SSHKEYNAME}
+```
+
+秘密鍵および公開鍵の名前を削除
+(変数が設定されていることを必ず確認してください！！！)
+
+```
+rm ~/.ssh/${SSHKEYNAME}*
+```
+
+## IAMユーザの削除
+
+```
+aws iam delete-user --user-name ${GITUSER}
 ```
