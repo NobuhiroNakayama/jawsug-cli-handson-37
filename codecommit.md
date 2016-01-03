@@ -150,7 +150,7 @@ Enter same passphrase again:
 Your identification has been saved in /home/ec2-user/.ssh/id_rsa.
 Your public key has been saved in /home/ec2-user/.ssh/id_rsa.pub.
 The key fingerprint is:
-**:**:**:**:**:**:**:**:**:**:**:**:**:**:**:** ec2-user@ip-172-31-13-173
+**:**:**:**:**:**:**:**:**:**:**:**:**:**:**:** ec2-user@ip-172-***-***-***
 The key's randomart image is:
 +--[ RSA 2048]----+
 |                 |
@@ -347,7 +347,7 @@ yesを入力
 
 ```
 The authenticity of host 'git-codecommit.us-east-1.amazonaws.com (72.21.203.185)' can't be established.
-RSA key fingerprint is a6:9c:7d:bc:35:f5:d4:5f:8b:ba:6f:c8:bc:d4:83:84.
+RSA key fingerprint is **:**:**:**:**:**:**:**:**:**:**:**:**:**:**:**.
 Are you sure you want to continue connecting (yes/no)?
 ```
 
