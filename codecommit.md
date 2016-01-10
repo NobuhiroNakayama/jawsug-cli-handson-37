@@ -638,7 +638,7 @@ A client error (BranchDoesNotExistException) occurred when calling the GetBranch
 URL(SSH)を確認
 
 ```
-SSHURL=`aws codecommit get-repository --repository-name MyDemoRepo | jq -r .repositoryMetadata.cloneUrlSsh`
+SSHURL=`aws codecommit get-repository --repository-name ${REPONAME} --query repositoryMetadata.cloneUrlSsh --output text`
 
 echo ${SSHURL}
 ```
