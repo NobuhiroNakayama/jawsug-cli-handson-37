@@ -816,14 +816,14 @@ nothing to commit, working directory clean
 
 ```
 cat << EOF >> ${FILENAME}
-write for new branch
+fix for development
 EOF
 
 cat ${FILENAME}
 ```
 
 ```
-write for new branch
+fix for development
 ```
 
 追加
@@ -835,7 +835,7 @@ git add ${FILENAME}
 コミット
 
 ```
-git commit -m "add new line"
+git commit -m "fix for development"
 ```
 
 ```
@@ -844,6 +844,8 @@ git commit -m "add new line"
 ```
 
 ## マスターブランチへのマージ
+
+一般的なGit FlowではReleaseブランチを経由しますが、手順を簡略化するため、masterブランチへ直接マージします。
 
 ```
 git checkout master
