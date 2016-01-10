@@ -260,9 +260,10 @@ aws iam list-ssh-public-keys --user-name ${GITUSER}
 ## 認証情報の設定（SSH接続の場合）
 
 公開鍵のIDを取得
+（有効なSSHキーが一つだけ設定されている前提）
 
 ```
-SSHPUBID=`aws iam list-ssh-public-keys --user-name ${GITUSER} | jq -r '.SSHPublicKeys[0].SSHPublicKeyId'`
+SSHPUBID=`aws iam list-ssh-public-keys --user-name ${GITUSER} --query 'SSHPublicKeys[0].SSHPublicKeyId' --output text`
 
 cat << ETX
 
