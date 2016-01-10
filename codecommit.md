@@ -616,11 +616,19 @@ git tag "v0.1.0"
 確認
 
 ```
-git tag
+git show v0.1.0
 ```
 
 ```
-v0.1.0
+commit bb4bd3bbbf3152dc6cd16783ff073a6b38471605
+Author: user01 <user01@example.com>
+Date:   Sun Jan 10 06:50:26 2016 +0000
+
+    create codecommit.txt
+
+diff --git a/codecommit.txt b/codecommit.txt
+new file mode 100644
+index 0000000..e69de29
 ```
 
 # 変更をプッシュ
@@ -914,6 +922,8 @@ Date:   Sun Jan 3 08:22:00 2016 +0000
     create codecommit.txt
 ```
 
+
+
 ## リモートリポジトリへのプッシュ
 
 ```
@@ -928,6 +938,35 @@ remote:
 To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
    0fd2151..3e121a8  master -> master
    0fd2151..3e121a8  MyNewBranch -> MyNewBranch
+```
+
+## タグを付与
+
+バージョン番号を設定
+
+```
+git tag "v1.0.0"
+```
+
+確認
+
+```
+git show v1.0.0
+```
+
+```
+commit 58880fea8cce5f5326f702b572665c0af31d4eb5
+Author: user01 <user01@example.com>
+Date:   Sun Jan 10 07:09:20 2016 +0000
+
+    fix for development
+
+diff --git a/codecommit.txt b/codecommit.txt
+index e69de29..a4b7b23 100644
+--- a/codecommit.txt
++++ b/codecommit.txt
+@@ -0,0 +1 @@
++fix for development
 ```
 
 確認1
@@ -954,7 +993,7 @@ aws codecommit get-branch --repository-name ${REPONAME} --branch-name  ${BRANCHN
 {
     "branch": {
         "commitId": "****************************************",
-        "branchName": "MyNewBranch"
+        "branchName": "develop"
     }
 }
 ```
