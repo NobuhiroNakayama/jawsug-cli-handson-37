@@ -400,7 +400,7 @@ aws iam list-attached-user-policies --user-name ${GITUSER}
 
 # Gitをインストール
 
-インストール
+インストール（インストールされていない場合）
 
 ```
 sudo yum install git -y
