@@ -785,8 +785,8 @@ git checkout ${BRANCHNAME}
 ```
 
 ```
-Branch MyNewBranch set up to track remote branch MyNewBranch from origin.
-Switched to a new branch 'MyNewBranch'
+Branch develop set up to track remote branch develop from origin.
+Switched to a new branch 'develop'
 ```
 
 確認1
@@ -796,7 +796,7 @@ git branch
 ```
 
 ```
-* MyNewBranch
+* develop
   master
 ```
 
@@ -807,8 +807,8 @@ git status
 ```
 
 ```
-On branch MyNewBranch
-Your branch is up-to-date with 'origin/MyNewBranch'.
+On branch develop
+Your branch is up-to-date with 'origin/develop'.
 nothing to commit, working directory clean
 ```
 
