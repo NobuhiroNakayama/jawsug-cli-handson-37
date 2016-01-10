@@ -707,7 +707,7 @@ COMMITID=`aws codecommit get-branch --repository-name ${REPONAME} --branch-name 
 ブランチ名の決定
 
 ```
-BRANCHNAME="MyNewBranch"
+BRANCHNAME="develop"
 ```
 
 確認
@@ -748,6 +748,19 @@ aws codecommit get-branch --repository-name ${REPONAME} --branch-name ${BRANCHNA
         "commitId": "****************************************",
         "branchName": "MyNewBranch"
     }
+}
+```
+
+```
+aws codecommit list-branches --repository-name ${REPONAME}
+```
+
+```
+{
+    "branches": [
+        "develop",
+        "master"
+    ]
 }
 ```
 
