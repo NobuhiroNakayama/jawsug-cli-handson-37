@@ -21,7 +21,7 @@ export AWS_DEFAULT_REGION='us-east-1'
 # リポジトリの作成
 
 リポジトリ名および説明を設定します
-（リポジトリ名はグローバルでユニークである必要はあるのか？？？）
+（リポジトリ名はグローバルでユニークである必要はありません）
 
 ```
 REPONAME='MyDemoRepo'
@@ -111,7 +111,7 @@ aws codecommit get-repository --repository-name ${REPONAME}
 
 ## キーペアの作成
 
-sshキーの名前を設定
+sshキーの名前を設定（既存ファイルと名前重複を避けるか、既存ファイルのリネームなど対策を！）
 
 ```
 SSHKEYNAME='id_rsa'
@@ -278,7 +278,7 @@ aws iam list-ssh-public-keys --user-name ${GITUSER}
 公開鍵のIDを取得
 
 ```
-SSHPUBID=`aws iam list-ssh-public-keys --user-name ${GITUSER} | jq .SSHPublicKeys | jq -r .[].SSHPublicKeyId`
+SSHPUBID=`aws iam list-ssh-public-keys --user-name ${GITUSER} | jq -r '.SSHPublicKeys[0].SSHPublicKeyId'`
 
 cat << ETX
 
@@ -293,7 +293,7 @@ ETX
 
 ```
 
-設定ファイルを作成
+設定ファイルを作成（既存ファイルがある場合はリネームしておくなどの対策を！）
 
 ```
 cat << EOF > ~/.ssh/config
