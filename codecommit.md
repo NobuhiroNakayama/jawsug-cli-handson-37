@@ -940,35 +940,6 @@ To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
    0fd2151..3e121a8  MyNewBranch -> MyNewBranch
 ```
 
-## タグを付与
-
-バージョン番号を設定
-
-```
-git tag "v1.0.0"
-```
-
-確認
-
-```
-git show v1.0.0
-```
-
-```
-commit 58880fea8cce5f5326f702b572665c0af31d4eb5
-Author: user01 <user01@example.com>
-Date:   Sun Jan 10 07:09:20 2016 +0000
-
-    fix for development
-
-diff --git a/codecommit.txt b/codecommit.txt
-index e69de29..a4b7b23 100644
---- a/codecommit.txt
-+++ b/codecommit.txt
-@@ -0,0 +1 @@
-+fix for development
-```
-
 確認1
 
 ```
@@ -998,40 +969,34 @@ aws codecommit get-branch --repository-name ${REPONAME} --branch-name  ${BRANCHN
 }
 ```
 
-# オプション
+## タグを付与
 
-## clone
-
-後で書く
+バージョン番号を設定
 
 ```
-cd ~
-
-git clone ${SSHURL} ${REPONAME}
-
-cd ${REPONAME}
+git tag "v1.0.0"
 ```
 
-## revert
+確認
 
-後で書く（そもそも可能？）
+```
+git show v1.0.0
+```
 
-## reset
+```
+commit 58880fea8cce5f5326f702b572665c0af31d4eb5
+Author: user01 <user01@example.com>
+Date:   Sun Jan 10 07:09:20 2016 +0000
 
-後で書く（そもそも可能？）
+    fix for development
 
-## rebase
-
-後で書く（そもそも可能？）
-
-## タグの利用
-
-後で書く
-
-## 競合の解決
-
-後で書く
-
+diff --git a/codecommit.txt b/codecommit.txt
+index e69de29..a4b7b23 100644
+--- a/codecommit.txt
++++ b/codecommit.txt
+@@ -0,0 +1 @@
++fix for development
+```
 
 # 後始末
 
@@ -1084,7 +1049,7 @@ rm -rf ${REPONAME}
 
 ## 資格情報の削除
 
-設定ファイルを確認
+設定ファイルを削除
 
 ```
 rm ~/.ssh/config
@@ -1101,7 +1066,7 @@ id_rsa
 ```
 
 秘密鍵および公開鍵の名前を削除
-(変数が設定されていることを必ず確認してください！！！)
+(変数が正しく設定されていることを必ず確認してください！！！)
 
 ```
 rm ~/.ssh/${SSHKEYNAME}
@@ -1143,7 +1108,7 @@ ETX
 アタッチされているポリシーの確認
 
 ```
-ARN=`aws iam list-attached-user-policies --user-name ${GITUSER} | jq -r .AttachedPolicies[].PolicyArn`
+ARN=`aws iam list-attached-user-policies --user-name ${GITUSER} --query AttachedPolicies[].PolicyArn --output text`
 
 echo ${ARN}
 ```
@@ -1152,7 +1117,7 @@ echo ${ARN}
 arn:aws:iam::aws:policy/AWSCodeCommitPowerUser
 ```
 
-マネージドポリシーの削除
+マネージドポリシーのデタッチ
 
 ```
 aws iam detach-user-policy --user-name ${GITUSER} --policy-arn ${ARN}
