@@ -188,22 +188,6 @@ drwx------ 8 ec2-user ec2-user 4096 Dec 21 10:30 ..
 GITUSER='git-user'
 ```
 
-ユーザ名を確認します
-
-```
-cat << ETX
-
-   iam-user-name: ${GITUSER}
-
-ETX
-```
-
-```
-
-   iam-user-name: git-user
-
-```
-
 同じ名前のユーザがいないことを確認します
 
 ```
