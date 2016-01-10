@@ -512,7 +512,7 @@ ETX
 
 ```
 git config --global user.name "${MYNAME}"
-git config --global user.email "${MYEMAIL}"
+git config --global user.email "${EMAIL}"
 ```
 
 確認
