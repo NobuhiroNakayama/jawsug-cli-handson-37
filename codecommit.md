@@ -843,6 +843,21 @@ git commit -m "fix for development"
  1 file changed, 1 insertion(+)
 ```
 
+## developブランチのプッシュ
+
+```
+git push origin ${BRANCHNAME}
+```
+
+```
+Counting objects: 3, done.
+Writing objects: 100% (3/3), 268 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+remote:
+To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
+   bb4bd3b..58880fe  develop -> develop
+```
+
 ## マスターブランチへのマージ
 
 一般的なGit FlowではReleaseブランチを経由しますが、手順を簡略化するため、masterブランチへ直接マージします。
@@ -902,7 +917,7 @@ Date:   Sun Jan 3 08:22:00 2016 +0000
 ## リモートリポジトリへのプッシュ
 
 ```
-git push origin --all
+git push origin master
 ```
 
 ```
