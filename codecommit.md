@@ -1108,7 +1108,7 @@ ETX
 アタッチされているポリシーの確認
 
 ```
-ARN=`aws iam list-attached-user-policies --user-name ${GITUSER} --query AttachedPolicies[].PolicyArn --output text`
+ARN=`aws iam list-attached-user-policies --user-name ${GITUSER} --query AttachedPolicies[0].PolicyArn --output text`
 
 echo ${ARN}
 ```
@@ -1138,7 +1138,7 @@ aws iam list-attached-user-policies --user-name ${GITUSER}
 SSH公開鍵IDの確認
 
 ```
-SSHKEYID=`aws iam list-ssh-public-keys --user-name ${GITUSER} | jq -r .SSHPublicKeys[].SSHPublicKeyId`
+SSHKEYID=`aws iam list-ssh-public-keys --user-name ${GITUSER} --query SSHPublicKeys[0].SSHPublicKeyId --output text`
 
 echo ${SSHKEYID}
 ```
