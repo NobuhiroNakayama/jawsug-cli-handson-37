@@ -278,7 +278,14 @@ ETX
 
 ```
 
-設定ファイルを作成（既存ファイルがある場合はリネームしておくなどの対策を！）
+設定ファイルのリネーム（既存の設定ファイルがある場合）
+
+```
+ls ~/.ssh/config.old
+sudo cp ~/.ssh/config ~/.ssh/config.old
+```
+
+設定ファイルを作成
 
 ```
 cat << EOF > ~/.ssh/config
