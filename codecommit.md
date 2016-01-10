@@ -701,7 +701,7 @@ aws codecommit get-branch --repository-name ${REPONAME} --branch-name  master
 コミットIDの確認
 
 ```
-COMMITID=`aws codecommit get-branch --repository-name ${REPONAME} --branch-name master | jq  -r .branch.commitId`
+COMMITID=`aws codecommit get-branch --repository-name ${REPONAME} --branch-name master --query branch.commitId --output text`
 ```
 
 ブランチ名の決定
