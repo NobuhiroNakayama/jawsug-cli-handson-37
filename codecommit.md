@@ -764,17 +764,17 @@ aws codecommit list-branches --repository-name ${REPONAME}
 }
 ```
 
-リモートリポジトリからローカルリポジトリへ新しいブランチのコンテンツをフェッチ
+リモートリポジトリからローカルリポジトリへ新しいブランチのコンテンツをプル
 
 ```
-git fetch origin ${BRANCHNAME}
+git pull origin ${BRANCHNAME}
 ```
 
 ```
-Warning: Permanently added the RSA host key for IP address '54.239.20.180' to the list of known hosts.
-From ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
- * branch            MyNewBranch -> FETCH_HEAD
- * [new branch]      MyNewBranch -> origin/MyNewBranch
+From ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
+ * branch            develop    -> FETCH_HEAD
+ * [new branch]      develop    -> origin/develop
+Already up-to-date.
 ```
 
 
