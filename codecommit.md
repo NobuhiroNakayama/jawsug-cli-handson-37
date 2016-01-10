@@ -24,7 +24,7 @@ export AWS_DEFAULT_REGION='us-east-1'
 （リポジトリ名はグローバルでユニークである必要はありません）
 
 ```
-REPONAME='MyDemoRepo'
+REPONAME='my-demo-repo'
 REPODESC='My demonstration repository'
 ```
 
