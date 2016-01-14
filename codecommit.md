@@ -9,14 +9,49 @@
 - CodeCommitに関するフルコントロール権限
 - IAMに関するフルコントロール権限
 
+## テスト環境について
+
+動作確認はAmazon Linuxで行っています。
+
+
+# 動作環境確認
+
+AWS CLIのバージョンを確認します。
+
+```
+aws --version
+```
+
+```
+aws-cli/1.9.18 Python/2.7.10 Linux/4.1.13-19.30.amzn1.x86_64 botocore/1.3.18
+```
+
+プロファイルが想定のものになっていることを確認します。
+
+```
+aws configure list
+```
+
+```
+Name                    Value             Type    Location
+----                    -----             ----    --------
+profile                <not set>             None    None
+access_key     ****************R63A         iam-role
+secret_key     ****************0xHB         iam-role
+region                us-east-1              env    AWS_DEFAULT_REGION
+```
+
+
 # 事前準備
 
 リージョンを設定します。
-現時点（2015年12月21日）では、バージニアのみサポート
+現時点（2016年1月14日）では、バージニアのみサポート
 
 ```
 export AWS_DEFAULT_REGION='us-east-1'
 ```
+
+
 
 # リポジトリの作成
 
@@ -107,7 +142,46 @@ aws codecommit get-repository --repository-name ${REPONAME}
 }
 ```
 
-# 認証情報の設定
+# IAMユーザの作成
+
+CodeCommitではSSHおよびHTTPS接続をサポートしています。
+リポジトリへの接続時の認証のためにIAMユーザを作成します。
+
+ユーザ名を設定します。
+
+```
+GITUSER='git-user'
+```
+
+同じ名前のユーザがいないことを確認します
+
+```
+aws iam get-user --user-name ${GITUSER}
+```
+
+```
+A client error (NoSuchEntity) occurred when calling the GetUser operation: The user with name git-user cannot be found.
+```
+
+IAMユーザを作成します
+
+```
+aws iam create-user --user-name ${GITUSER}
+```
+
+```
+{
+    "User": {
+        "UserName": "git-user",
+        "Path": "/",
+        "CreateDate": "2015-12-21T10:06:05.212Z",
+        "UserId": "A********************",
+        "Arn": "arn:aws:iam::************:user/git-user"
+    }
+}
+```
+
+# 認証情報の設定（SSH接続用）
 
 ## キーペアの作成
 
@@ -136,7 +210,7 @@ ETX
 ```
 
 sshキーを作成
-（パスワードの設定は任意）
+（パスワードの設定は不要）
 
 ```
 cd ~/.ssh
@@ -180,42 +254,6 @@ drwx------ 8 ec2-user ec2-user 4096 Dec 21 10:30 ..
 -rw-r--r-- 1 ec2-user ec2-user  407 Dec 23 14:20 id_rsa.pub
 ```
 
-## IAMユーザの作成
-
-ユーザ名を設定します
-
-```
-GITUSER='git-user'
-```
-
-同じ名前のユーザがいないことを確認します
-
-```
-aws iam get-user --user-name ${GITUSER}
-```
-
-```
-A client error (NoSuchEntity) occurred when calling the GetUser operation: The user with name git-user cannot be found.
-```
-
-IAMユーザを作成します
-
-```
-aws iam create-user --user-name ${GITUSER}
-```
-
-```
-{
-    "User": {
-        "UserName": "git-user",
-        "Path": "/",
-        "CreateDate": "2015-12-21T10:06:05.212Z",
-        "UserId": "A********************",
-        "Arn": "arn:aws:iam::************:user/git-user"
-    }
-}
-```
-
 ## 公開鍵をアップロード
 
 公開鍵をアップロードします。
@@ -257,7 +295,7 @@ aws iam list-ssh-public-keys --user-name ${GITUSER}
 }
 ```
 
-## 認証情報の設定（SSH接続の場合）
+## 認証用設定ファイルの作成
 
 公開鍵のIDを取得
 （有効なSSHキーが一つだけ設定されている前提）
@@ -329,7 +367,7 @@ ls -al config
 -rw------- 1 ec2-user ec2-user 93 Dec 23 14:49 config
 ```
 
-接続確認
+## 接続確認
 
 ```
 ssh git-codecommit.us-east-1.amazonaws.com
@@ -997,6 +1035,297 @@ index e69de29..a4b7b23 100644
 @@ -0,0 +1 @@
 +fix for development
 ```
+
+
+# 認証情報の設定（HTTPS接続用）
+
+認証用のIAMユーザとして、SSH用に作成したIAMユーザを流用します。
+
+## アクセスキーおよびアクセスシークレットを作成
+
+ユーザ名を確認します。
+
+```
+cat << ETX
+
+        IAM_USER_NAME:  ${GITUSER}
+
+ETX
+```
+
+access keyの作成と取得を行います。
+
+```
+cd ~
+
+aws iam create-access-key \
+        --user-name ${GITUSER} \
+        > ${GITUSER}.json \
+          && cat ${GITUSER}.json
+```
+
+```
+{
+    "AccessKey": {
+        "UserName": "git-user",
+        "Status": "Active",
+        "CreateDate": "2016-01-14T15:12:22.319Z",
+        "SecretAccessKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "AccessKeyId": "AKIAXXXXXXXXXXXXXXXX"
+    }
+}
+```
+
+sourceディレクトリ作成
+
+```
+mkdir -p ~/.aws/source
+```
+
+rcファイル作成
+
+```
+cat ${GITUSER}.json |\
+        jq '.AccessKey | {AccessKeyId, SecretAccessKey}' |\
+        sed '/[{}]/d' | sed 's/[\" ,]//g' | sed 's/:/=/' |\
+        sed 's/AccessKeyId/aws_access_key_id/' |\
+        sed 's/SecretAccessKey/aws_secret_access_key/' \
+        > ~/.aws/source/${GITUSER}.rc \
+        && cat ~/.aws/source/${GITUSER}.rc
+```
+
+```
+aws_access_key_id=AKIAXXXXXXXXXXXXXXXX
+aws_secret_access_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+configファイル(単体)作成
+
+```bash:変数の設定:
+REGION_AWS_CONFIG="${AWS_DEFAULT_REGION}"
+
+FILE_USER_CONFIG="${HOME}/.aws/source/${GITUSER}.config"
+
+echo "[profile ${GITUSER}]" > ${FILE_USER_CONFIG} \
+  && echo "region=${REGION_AWS_CONFIG}" >> ${FILE_USER_CONFIG} \
+  && echo "" >> ${FILE_USER_CONFIG} \
+  && cat ${FILE_USER_CONFIG}
+```
+
+```
+[profile git-user]
+region=us-east-1
+```
+
+~/.aws/credentials作成
+
+既存の認証情報のバックアップを行います。
+
+```
+cp ~/.aws/credentials ~/.aws/credentials.old
+```
+
+認証情報を作成します。
+
+```
+file="${HOME}/.aws/credentials"
+if [ -e ${file} ]; then mv ${file} ${file}.bak; fi
+for i in `ls ${HOME}/.aws/source/*.rc`; do \
+        name=`echo $i | sed 's/^.*\///' | sed 's/\.rc$//'` \
+        && echo "[$name]" >> ${file} \
+        && cat $i >> ${file} \
+        && echo "" >> ${file} ;done \
+        && cat ${file}
+```
+
+```
+[git-user]
+aws_access_key_id=AKIAXXXXXXXXXXXXXXXX
+aws_secret_access_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+
+~/.aws/config作成
+
+設定ファイルをバックアップします。
+
+```
+cp ~/.aws/config ~/.aws/config.old
+```
+
+設定ファイルを作成します。
+
+```
+cat ${HOME}/.aws/source/*.config > ${HOME}/.aws/config \
+        && cat ${HOME}/.aws/config
+```
+
+```
+[profile git-user]
+region=us-east-1
+```
+
+
+## ユーザの切り替え
+
+
+現在のユーザを確認します。
+
+
+```
+aws configure list | grep profile
+```
+
+```
+   profile                <not set>             None    None
+```
+
+
+切替後ユーザの確認
+
+```
+cat << ETX
+
+        new:     IAM_USER_NAME:       ${GITUSER}
+
+ETX
+```
+
+
+ユーザの切り替え
+
+```
+export AWS_DEFAULT_PROFILE=${GITUSER}
+echo ${AWS_DEFAULT_PROFILE}
+```
+
+確認
+
+```
+aws configure list
+```
+
+```
+Name                    Value             Type    Location
+----                    -----             ----    --------
+profile                 git-user           manual    --profile
+access_key     ****************BX4Q shared-credentials-file
+secret_key     ****************pUaQ shared-credentials-file
+region                us-east-1              env    AWS_DEFAULT_REGION
+```
+
+コマンドテスト
+
+```
+aws codecommit list-repositories
+```
+
+```
+{
+    "repositories": [
+        {
+            "repositoryName": "my-demo-repo",
+            "repositoryId": "53b8501f-f5df-47c7-bee0-817624ad8677"
+        }
+    ]
+}
+```
+
+認証ファイルの削除
+
+```
+rm ${GITUSER}.json
+```
+
+## 認証情報の設定
+
+```
+git config --global credential.helper '!aws codecommit credential-helper $@'
+git config --global credential.UseHttpPath true
+```
+
+## リモートリポジトリのエンドポイントの変更
+
+URL(HTTPS)を確認
+
+```
+HTTPURL=`aws codecommit get-repository --repository-name ${REPONAME} --query repositoryMetadata.cloneUrlHttp --output text`
+
+echo ${HTTPURL}
+```
+
+```
+https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
+```
+
+リモートリポジトリを設定
+
+```
+git remote add https ${HTTPURL}
+```
+
+確認
+
+```
+git remote -v
+```
+
+```
+https   https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo (fetch)
+https   https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo (push)
+origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo (fetch)
+origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo (push)
+```
+
+## 動作確認
+
+コンテンツの修正を行います。
+
+```
+cat << EOF >> ${FILENAME}
+test HTTPS connection
+EOF
+
+cat ${FILENAME}
+```
+
+```
+fix for development
+test HTTPS connection
+```
+
+追加
+
+```
+git add ${FILENAME}
+```
+
+コミット
+
+```
+git commit -m "test HTTPS connection"
+```
+
+```
+[master 53092be] test HTTPS connection
+ 1 file changed, 1 insertion(+)
+```
+
+Masterブランチへのプッシュ
+
+```
+git push https master
+```
+
+```
+Counting objects: 3, done.
+Writing objects: 100% (3/3), 294 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+remote:
+To https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
+   bf9fca4..53092be  master -> master
+```
+
 
 # 後始末
 
