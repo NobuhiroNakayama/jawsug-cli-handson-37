@@ -1329,6 +1329,14 @@ To https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
 
 # 後始末
 
+事前に当初のプロファイルに変更を行ってください。
+
+IAMロールを使っている場合、AWS_DEFAULT_PROFILEをunset
+
+```
+unset AWS_DEFAULT_PROFILE
+```
+
 ## リモートリポジトリの削除
 
 リポジトリ名の確認
@@ -1492,6 +1500,36 @@ aws iam list-ssh-public-keys --user-name ${GITUSER}
 {
     "SSHPublicKeys": [],
     "IsTruncated": false
+}
+```
+
+アクセスキーの確認
+
+```
+ACCESSKEY=`aws iam list-access-keys --user-name ${GITUSER} --query AccessKeyMetadata[0].AccessKeyId --output text`
+
+echo ${ACCESSKEY}
+```
+
+```
+********************
+```
+
+アクセスキーの削除
+
+```
+aws iam delete-access-key --user-name ${GITUSER} --access-key-id ${ACCESSKEY}
+```
+
+確認
+
+```
+aws iam list-access-keys --user-name ${GITUSER}
+```
+
+```
+{
+    "AccessKeyMetadata": []
 }
 ```
 
