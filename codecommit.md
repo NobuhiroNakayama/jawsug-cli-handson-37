@@ -1,4 +1,5 @@
-ひと通り書けたと思います。
+このドキュメントは、JAWS-UG CLI専門支部 37 - CodeCommit入門のハンズオンの手順です。
+https://jawsug-cli.doorkeeper.jp/events/33301
 
 # 前提条件
 
