@@ -1349,28 +1349,48 @@ To https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
    bf9fca4..53092be  master -> master
 ```
 
-# その他のコマンド
+# 13. その他のコマンド
 
-## リポジトリ名の変更
+## 13.1. リポジトリ名の変更
 
-現状の確認
+確認
 
 ```
-aws codecommit
-```
-
+aws codecommit list-repositories
 ```
 
 ```
-
+{
+    "repositories": [
+        {
+            "repositoryName": "my-demo-repo",
+            "repositoryId": "********-****-****-****-************"
+        }
+    ]
+}
+```
 
 変更後のリポジトリ名を決定
 
 ```
+NEWREPONAME="new-my-demo-repo "
+```
 
+変数の確認
+
+```
+cat << ETX
+
+   Repository-Name: ${REPONAME}
+   New-Repository-Name: ${NEWREPONAME}
+
+ETX
 ```
 
 ```
+
+   Repository-Name: my-demo-repo
+   New-Repository-Name: new-my-demo-repo
 
 ```
 
@@ -1378,153 +1398,190 @@ aws codecommit
 変更
 
 ```
-
-```
-
-```
-
+aws codecommit update-repository-name --old-name ${REPONAME} --new-name ${NEWREPONAME}
 ```
 
 
 変更結果の確認
 
 ```
-
+aws codecommit list-repositories
 ```
 
 ```
-
+{
+    "repositories": [
+        {
+            "repositoryName": "new-my-demo-repo",
+            "repositoryId": "********-****-****-****-************"
+        }
+    ]
+}
 ```
 
 
-## リポジトリの説明の変更
+## 13.2. リポジトリの説明の変更
 
 現状の確認
 
 ```
-
+aws codecommit get-repository --repository-name ${NEWREPONAME}
 ```
 
 ```
-
+{
+    "repositoryMetadata": {
+        "creationDate": 1452998992.652,
+        "defaultBranch": "master",
+        "repositoryName": "new-my-demo-repo",
+        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo",
+        "lastModifiedDate": 1453025419.311,
+        "repositoryDescription": "My demonstration repository",
+        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo",
+        "repositoryId": "********-****-****-****-************",
+        "Arn": "arn:aws:codecommit:us-east-1:************:new-my-demo-repo",
+        "accountId": ":************:"
+    }
+}
 ```
 
 
-変更後のリポジトリ名を決定
+変更後のリポジトリの説明文を決定
 
 ```
-
-```
-
-```
-
+NEWREPODESC='New My demonstration repository'
 ```
 
 
 変更
 
 ```
-
-```
-
-```
-
+aws codecommit update-repository-description --repository-name ${NEWREPONAME} --repository-description "${NEWREPODESC}"
 ```
 
 
 変更結果の確認
 
 ```
-
+aws codecommit get-repository --repository-name ${NEWREPONAME}
 ```
 
 ```
-
+{
+    "repositoryMetadata": {
+        "creationDate": 1452998992.652,
+        "defaultBranch": "master",
+        "repositoryName": "new-my-demo-repo",
+        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo",
+        "lastModifiedDate": 1453026031.448,
+        "repositoryDescription": "New My demonstration repository",
+        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo",
+        "repositoryId": "********-****-****-****-************",
+        "Arn": "arn:aws:codecommit:us-east-1:************:new-my-demo-repo",
+        "accountId": ":************:"
+    }
+}
 ```
 
 
-## デフォルトブランチの変更
+## 13.3. デフォルトブランチの変更
 
 現状の確認
+（直前の手順で、"defaultBranch"を確認します。）
+
+
+変更後のブランチ名を決定
 
 ```
-
-```
-
-```
-
-```
-
-
-変更後のリポジトリ名を決定
-
-```
-
-```
-
-```
-
+NEWDEFAULTBRANCH="develop"
 ```
 
 
 変更
 
 ```
-
-```
-
-```
-
+aws codecommit update-default-branch --repository-name ${NEWREPONAME} --default-branch-name ${NEWDEFAULTBRANCH}
 ```
 
 
 変更結果の確認
 
 ```
-
+aws codecommit get-repository --repository-name ${NEWREPONAME}
 ```
 
 ```
-
+{
+    "repositoryMetadata": {
+        "creationDate": 1452998992.652,
+        "defaultBranch": "develop",
+        "repositoryName": "new-my-demo-repo",
+        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo",
+        "lastModifiedDate": 1453026359.808,
+        "repositoryDescription": "New My demonstration repository",
+        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo",
+        "repositoryId": "********-****-****-****-************",
+        "Arn": "arn:aws:codecommit:us-east-1:************:new-my-demo-repo",
+        "accountId": ":************:"
+    }
+}
 ```
 
 
-### 動作確認（リポジトリのクローン）
+### 13.3.1. 動作確認（リポジトリのクローン）
 
 ディレクトリの作成
 
 ```
+cd ~
+mkdir ${NEWREPONAME}
+```
 
+エンドポイントの確認
+
+URL(HTTPS)を確認
+
+```
+NEWHTTPURL=`aws codecommit get-repository --repository-name ${NEWREPONAME} --query repositoryMetadata.cloneUrlHttp --output text`
+
+echo ${NEWHTTPURL}
 ```
 
 ```
-
+https://git-codecommit.us-east-1.amazonaws.com/v1/repos/new-my-demo-repo
 ```
 
 
 クローン
 
 ```
-
+git clone ${NEWHTTPURL}
 ```
 
 ```
-
+Cloning into 'new-my-demo-repo'...
+remote: Counting objects: 9, done.
+remote:
+Unpacking objects: 100% (9/9), done.
+Checking connectivity... done.
 ```
 
 
 確認
 
 ```
-
+cd ${NEWREPONAME}
+gir status
 ```
 
 ```
-
+On branch develop
+Your branch is up-to-date with 'origin/develop'.
+nothing to commit, working directory clean
 ```
 
 
-# 13. 後始末
+# 14. 後始末
 
 事前に当初のプロファイルに変更を行ってください。
 
@@ -1534,28 +1591,28 @@ IAMロールを使っている場合、AWS_DEFAULT_PROFILEをunset
 unset AWS_DEFAULT_PROFILE
 ```
 
-## 13.1. リモートリポジトリの削除
+## 14.1. リモートリポジトリの削除
 
 リポジトリ名の確認
 
 ```
 cat << ETX
 
-   Repository-Name: ${REPONAME}
+   Repository-Name: ${NEWREPONAME}
 
 ETX
 ```
 
 ```
 
-   Repository-Name: MyDemoRepo
+   Repository-Name: new-my-demo-repo
 
 ```
 
 リポジトリの削除
 
 ```
-aws codecommit delete-repository --repository-name ${REPONAME}
+aws codecommit delete-repository --repository-name ${NEWREPONAME}
 ```
 
 ```
@@ -1567,21 +1624,24 @@ aws codecommit delete-repository --repository-name ${REPONAME}
 確認
 
 ```
-aws codecommit get-repository --repository-name ${REPONAME}
+aws codecommit list-repositories
 ```
 
 ```
-A client error (RepositoryDoesNotExistException) occurred when calling the GetRepository operation: MyDemoRepo does not exist
+{
+    "repositories": []
+}
 ```
 
-## 13.2. ローカルリポジトリの削除
+## 14.2. ローカルリポジトリの削除
 
 ```
 cd ~
 rm -rf ${REPONAME}
+rm -rf ${NEWREPONAME}
 ```
 
-## 13.3. 資格情報の削除
+## 14.3. 資格情報の削除
 
 設定ファイルを削除
 
@@ -1621,7 +1681,7 @@ drwx------ 3 ec2-user ec2-user 4096 Jan  3 10:19 ..
 -rw-r--r-- 1 ec2-user ec2-user 1326 Jan  3 08:54 known_hosts
 ```
 
-## 13.4. IAMユーザの削除
+## 14.4. IAMユーザの削除
 
 ユーザ名の確認
 
