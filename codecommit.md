@@ -1,21 +1,22 @@
 このドキュメントは、JAWS-UG CLI専門支部 37 - CodeCommit入門のハンズオンの手順です。
+
 https://jawsug-cli.doorkeeper.jp/events/33301
 
 # 0. 前提条件
 
 ## 0.1. 権限
 
-ハンズオンは以下の権限を付与されたユーザ（もしくはロール）で実行してください。
+今回のハンズオンは以下の権限が付与されたユーザ（もしくはインスタンスプロファイル（IAMロール）を設定したEC2インスタンス）で実行してください。
 
 - CodeCommitに関するフルコントロール権限
 - IAMに関するフルコントロール権限
 
-## 0.2.テスト環境について
+## 0.2. 動作確認環境について
 
-動作確認はAmazon Linuxで行っています。
+動作確認はAmazon Linuxで行いました。
 
 
-## 0.3.動作環境確認
+## 0.3. AWS CLIのバージョン確認
 
 AWS CLIのバージョンを確認します。
 
@@ -26,6 +27,8 @@ aws --version
 ```
 aws-cli/1.9.18 Python/2.7.10 Linux/4.1.13-19.30.amzn1.x86_64 botocore/1.3.18
 ```
+
+## 0.4. 設定情報の確認
 
 プロファイルが想定のものになっていることを確認します。
 
@@ -48,7 +51,7 @@ region                us-east-1              env    AWS_DEFAULT_REGION
 ## 1.1. リージョンの指定
 
 リージョンを設定します。
-現時点（2016年1月14日）では、バージニアのみサポート
+現時点（2016年1月17日）では、バージニアのみサポート
 
 ```
 export AWS_DEFAULT_REGION='us-east-1'
@@ -61,7 +64,7 @@ export AWS_DEFAULT_REGION='us-east-1'
 CodeCommitではSSHおよびHTTPS接続をサポートしています。
 リポジトリへの接続時の認証のためにIAMユーザを作成します。
 
-ユーザ名を設定します。
+ユーザ名を決定します。
 
 ```
 GITUSER='git-user'
@@ -99,13 +102,13 @@ aws iam create-user --user-name ${GITUSER}
 
 ## 3.1. キーペアの作成
 
-sshキーの名前を設定（既存ファイルと名前重複を避けるか、既存ファイルのリネームなど対策を！）
+sshキーのファイル名を決定します。（既存ファイルと名前重複を避けるか、既存ファイルのリネームなど対策をお願いします！）
 
 ```
 SSHKEYNAME='id_rsa'
 ```
 
-sshキーの名前を確認
+sshキーの名前を確認します。
 
 ```
 cat << ETX
@@ -123,8 +126,8 @@ ETX
 
 ```
 
-sshキーを作成
-（パスワードの設定は不要）
+sshキーを作成します。
+（パスワードの設定は不要です。）
 
 ```
 cd ~/.ssh
@@ -153,7 +156,7 @@ The key's randomart image is:
 +-----------------+
 ```
 
-出力されたファイルを確認
+出力されたファイルを確認します。
 
 ```
 ls -al
@@ -170,7 +173,7 @@ drwx------ 8 ec2-user ec2-user 4096 Dec 21 10:30 ..
 
 ## 3.2. 公開鍵をアップロード
 
-公開鍵をアップロードします。
+公開鍵を作成したIAMユーザに対してアップロードします。
 
 ```
 aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file://${SSHKEYNAME}.pub
@@ -189,7 +192,7 @@ aws iam upload-ssh-public-key --user-name ${GITUSER} --ssh-public-key-body file:
 }
 ```
 
-確認
+公開鍵がアップロードされたことを確認します。
 
 ```
 aws iam list-ssh-public-keys --user-name ${GITUSER}
@@ -211,8 +214,7 @@ aws iam list-ssh-public-keys --user-name ${GITUSER}
 
 ## 3.3. 認証用設定ファイルの作成
 
-公開鍵のIDを取得
-（有効なSSHキーが一つだけ設定されている前提）
+公開鍵のIDを取得します。
 
 ```
 SSHPUBID=`aws iam list-ssh-public-keys --user-name ${GITUSER} --query 'SSHPublicKeys[0].SSHPublicKeyId' --output text`
@@ -230,14 +232,15 @@ ETX
 
 ```
 
-設定ファイルのリネーム（既存の設定ファイルがある場合）
+設定ファイルをリネームします。
+（既存の設定ファイルがある場合）
 
 ```
 ls ~/.ssh/config.old
 sudo cp ~/.ssh/config ~/.ssh/config.old
 ```
 
-設定ファイルを作成
+設定ファイルを作成します。
 
 ```
 cat << EOF > ~/.ssh/config
@@ -255,7 +258,7 @@ Host git-codecommit.*.amazonaws.com
   IdentityFile ~/.ssh/id_rsa
 ```
 
-認証情報の設定ファイルを確認
+認証情報の設定ファイルを確認します。
 
 ```
 ls -al config
@@ -265,13 +268,13 @@ ls -al config
 -rw-rw-r-- 1 ec2-user ec2-user   93 Dec 23 14:49 config
 ```
 
-設定ファイルのパーミッションを変更
+設定ファイルのパーミッションを変更します。
 
 ```
 chmod 600 config
 ```
 
-設定ファイルのパーミッションを確認
+設定ファイルのパーミッションが正常に変更できたことを確認します。
 
 ```
 ls -al config
@@ -287,7 +290,8 @@ ls -al config
 ssh git-codecommit.us-east-1.amazonaws.com
 ```
 
-yesを入力
+yesを入力します。
+（初回接続時にのみ、確認を求められます。）
 
 ```
 The authenticity of host 'git-codecommit.us-east-1.amazonaws.com (72.21.203.185)' can't be established.
@@ -303,13 +307,13 @@ Connection to git-codecommit.us-east-1.amazonaws.com closed.
 
 # 4. 権限を付与
 
-マネージドポリシーのARNを決定
+マネージドポリシーのARNを決定します。
 
 ```
 ARN="arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
 ```
 
-ARNを確認
+ARNを確認します。
 
 ```
 cat << ETX
@@ -327,13 +331,13 @@ ETX
 
 ```
 
-マネージドポリシーをアタッチ
+マネージドポリシーをアタッチします。
 
 ```
 aws iam attach-user-policy --user-name ${GITUSER} --policy-arn ${ARN}
 ```
 
-ポリシーがアタッチされたことを確認
+ポリシーがアタッチされたことを確認します。
 
 ```
 aws iam list-attached-user-policies --user-name ${GITUSER}
@@ -352,7 +356,10 @@ aws iam list-attached-user-policies --user-name ${GITUSER}
 
 # 5. Gitをインストール
 
-インストール（インストールされていない場合）
+インストール
+（インストールされていない場合）
+
+Windows環境などの場合には、GitHub Desktopなど、お好きなツールを利用してください。
 
 ```
 sudo yum install git -y
@@ -423,7 +430,7 @@ Dependency Installed:
 Complete!
 ```
 
-Gitのバージョンを確認
+Gitのバージョンを確認します。
 
 ```
 git --version
@@ -437,14 +444,16 @@ git version 2.4.3
 
 ## 6.1. ユーザ名およびメールアドレスの設定
 
-ユーザ名とメールアドレスを変数に設定
+ユーザ名とメールアドレスを決定します。
+
+このユーザ名とメールアドレスは、Authorとしてコミットログに記録されます。
 
 ```
 MYNAME=user01
 EMAIL=user01@example.com
 ```
 
-確認
+変数に設定されていることを確認します。
 
 ```
 cat << ETX
@@ -462,14 +471,14 @@ ETX
 
 ```
 
-ユーザ名とメールアドレスを設定
+ユーザ名とメールアドレスをgitに設定します。
 
 ```
 git config --global user.name "${MYNAME}"
 git config --global user.email "${EMAIL}"
 ```
 
-確認
+gitに設定されたことを確認します。
 
 ```
 git config --get user.name
@@ -485,13 +494,13 @@ user01@example.com
 
 ## 7.1. ディレクトリの作成
 
-リポジトリ名を決定します
+リポジトリ名を決定します。
 
 ```
 REPONAME='my-demo-repo'
 ```
 
-ディレクトリの作成
+ローカルリポジトリを作成するディレクトリを作成し、作成したディレクトリに移動します。
 
 ```
 cd ~
@@ -500,6 +509,10 @@ cd ${REPONAME}
 ```
 
 ## 7.2. 初期化
+
+ローカルリポジトリを初期化します。
+
+初期化することで、これ以降このディレクトリはgitのローカルリポジトリとして機能することができます。
 
 ```
 git init
@@ -512,6 +525,10 @@ Initialized empty Git repository in /home/ec2-user/my-demo-repo/.git/
 # 8. コンテンツの追加
 
 ## 8.1. インデックスの状態を確認
+
+ステータスを確認します。
+
+出力内容から、HEADがmasterブランチ上にあることやコンテンツがまだ無いことが確認できます。
 
 ```
 git status
@@ -527,27 +544,39 @@ nothing to commit (create/copy files and use "git add" to track)
 
 ## 8.2. コンテンツを追加
 
-ファイル名を決定
+ファイル名を決定します。
 
 ```
 FILENAME=codecommit.txt
 ```
 
-ファイルを作成
+ファイルを作成します。
 
 ```
 touch ${FILENAME}
 ```
 
-ファイルを追加
+ファイルを追加します。
+
+gitのコンテンツとして扱うためには、git addコマンドが必要です。
 
 ```
 git add ${FILENAME}
 ```
 
+（参考）以下のコマンドで、直近のコミットから変更されているファイルをすべてgit addすることができます。
+
+```
+git add
+```
+
+
 ## 8.3. 変更をコミット
 
-コミット
+追加したコンテンツをコミットします。
+
+コミットとは、セーブするという意味だと認識しておけばOKです。
+（実際には、ファイルの差分の管理など、細かいことを裏で管理しています。）
 
 ```
 git commit -m "create ${FILENAME}"
@@ -559,7 +588,7 @@ git commit -m "create ${FILENAME}"
  create mode 100644 codecommit.txt
 ```
 
-確認
+コミットログを確認します。
 
 ```
 git log
@@ -575,13 +604,13 @@ Date:   Sun Jan 17 02:46:57 2016 +0000
 
 ## 8.4. タグを付与
 
-バージョン番号を設定
+タグとしてバージョン番号を設定します。
 
 ```
 git tag "v0.1.0"
 ```
 
-確認
+タグが設定できていることを確認します。
 
 ```
 git show v0.1.0
@@ -602,13 +631,13 @@ index 0000000..e69de29
 
 # 9. リモートリポジトリの作成
 
-リポジトリの説明を設定します
+リポジトリの説明を決定します。
 
 ```
 REPODESC='My demonstration repository'
 ```
 
-変数を確認します
+変数を確認します。
 
 ```
 cat << ETX
