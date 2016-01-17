@@ -485,6 +485,12 @@ user01@example.com
 
 ## 7.1. ディレクトリの作成
 
+リポジトリ名を決定します
+
+```
+REPONAME='my-demo-repo'
+```
+
 ディレクトリの作成
 
 ```
@@ -500,7 +506,7 @@ git init
 ```
 
 ```
-Initialized empty Git repository in /home/ec2-user/MyDemoRepo/.git/
+Initialized empty Git repository in /home/ec2-user/my-demo-repo/.git/
 ```
 
 # 8. コンテンツの追加
@@ -559,6 +565,14 @@ git commit -m "create ${FILENAME}"
 git log
 ```
 
+```
+commit ****************************************
+Author: user01 <user01@example.com>
+Date:   Sun Jan 17 02:46:57 2016 +0000
+
+    create codecommit.txt
+```
+
 ## 8.4. タグを付与
 
 バージョン番号を設定
@@ -574,9 +588,9 @@ git show v0.1.0
 ```
 
 ```
-commit bb4bd3bbbf3152dc6cd16783ff073a6b38471605
+commit ****************************************
 Author: user01 <user01@example.com>
-Date:   Sun Jan 10 06:50:26 2016 +0000
+Date:   Sun Jan 17 02:46:57 2016 +0000
 
     create codecommit.txt
 
@@ -588,11 +602,9 @@ index 0000000..e69de29
 
 # 9. リモートリポジトリの作成
 
-リポジトリ名および説明を設定します
-（リポジトリ名はグローバルでユニークである必要はありません）
+リポジトリの説明を設定します
 
 ```
-REPONAME='my-demo-repo'
 REPODESC='My demonstration repository'
 ```
 
@@ -609,12 +621,13 @@ ETX
 
 ```
 
-   repository-name: MyDemoRepo
+   repository-name: my-demo-repo
    repository-description: My demonstration repository
 
 ```
 
 リポジトリを作成します。
+（Management Consoleを確認してみてください。）
 
 ```
 aws codecommit create-repository --repository-name ${REPONAME} --repository-description "${REPODESC}"
@@ -623,15 +636,15 @@ aws codecommit create-repository --repository-name ${REPONAME} --repository-desc
 ```
 {
     "repositoryMetadata": {
-        "repositoryName": "MyDemoRepo",
-        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo",
-        "lastModifiedDate": 1450690437.262,
+        "repositoryName": "my-demo-repo",
+        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo",
+        "lastModifiedDate": 1452998992.652,
         "repositoryDescription": "My demonstration repository",
-        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo",
-        "creationDate": 1450690437.262,
+        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo",
+        "creationDate": 1452998992.652,
         "repositoryId": "********-****-****-****-************",
-        "Arn": "arn:aws:codecommit:us-east-1:************:MyDemoRepo",
-        "accountId": "************"
+        "Arn": "arn:aws:codecommit:us-east-1:************:my-demo-repo",
+        "accountId": ":************:"
     }
 }
 ```
@@ -646,7 +659,7 @@ aws codecommit list-repositories
 {
     "repositories": [
         {
-            "repositoryName": "MyDemoRepo",
+            "repositoryName": "my-demo-repo",
             "repositoryId": "********-****-****-****-************"
         }
     ]
@@ -662,14 +675,14 @@ aws codecommit get-repository --repository-name ${REPONAME}
 ```
 {
     "repositoryMetadata": {
-        "repositoryName": "MyDemoRepo",
-        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo",
-        "lastModifiedDate": 1450690437.262,
+        "repositoryName": "my-demo-repo",
+        "cloneUrlSsh": "ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo",
+        "lastModifiedDate": 1452998992.652,
         "repositoryDescription": "My demonstration repository",
-        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo",
-        "creationDate": 1450690437.262,
+        "cloneUrlHttp": "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo",
+        "creationDate": 1452998992.652,
         "repositoryId": "********-****-****-****-************",
-        "Arn": "arn:aws:codecommit:us-east-1:************:MyDemoRepo",
+        "Arn": "arn:aws:codecommit:us-east-1:************:my-demo-repo",
         "accountId": "************"
     }
 }
@@ -697,7 +710,7 @@ echo ${SSHURL}
 ```
 
 ```
-ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
+ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
 ```
 
 リモートリポジトリを設定
@@ -713,11 +726,12 @@ git remote -v
 ```
 
 ```
-origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo (fetch)
-origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo (push)
+origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo (fetch)
+origin  ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo (push)
 ```
 
 コミットしたコンテンツをプッシュ
+（Management Consoleを確認してみてください。）
 
 ```
 git push origin master
@@ -725,12 +739,12 @@ git push origin master
 
 ```
 Counting objects: 3, done.
-Writing objects: 100% (3/3), 216 bytes | 0 bytes/s, done.
+Writing objects: 100% (3/3), 217 bytes | 0 bytes/s, done.
 Total 3 (delta 0), reused 0 (delta 0)
 remote:
-To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
+To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
  * [new branch]      master -> master
-```
+ ```
 
 プッシュ後の状態を確認
 
@@ -779,7 +793,7 @@ ETX
 
    Repository-Name: MyDemoRepo
    Commit ID: ****************************************
-   Branch Name: MyNewBranch
+   Branch Name: develop
 
 ```
 
@@ -799,7 +813,7 @@ aws codecommit get-branch --repository-name ${REPONAME} --branch-name ${BRANCHNA
 {
     "branch": {
         "commitId": "****************************************",
-        "branchName": "MyNewBranch"
+        "branchName": "develop"
     }
 }
 ```
@@ -930,7 +944,7 @@ git branch
 ```
 
 ```
-MyNewBranch
+develop
 * master
 ```
 
@@ -974,13 +988,10 @@ git push origin master
 ```
 
 ```
-Counting objects: 3, done.
-Writing objects: 100% (3/3), 262 bytes | 0 bytes/s, done.
-Total 3 (delta 0), reused 0 (delta 0)
+Total 0 (delta 0), reused 0 (delta 0)
 remote:
-To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo
-   0fd2151..3e121a8  master -> master
-   0fd2151..3e121a8  MyNewBranch -> MyNewBranch
+To ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
+   649f285..af8b53e  master -> master
 ```
 
 確認1
@@ -999,6 +1010,8 @@ aws codecommit get-branch --repository-name ${REPONAME} --branch-name  master
 ```
 
 確認2
+（masterブランチと同じコミットIDであることが確認できます。）
+
 ```
 aws codecommit get-branch --repository-name ${REPONAME} --branch-name  ${BRANCHNAME}
 ```
@@ -1106,7 +1119,7 @@ aws_secret_access_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 configファイル(単体)作成
 
-```bash:変数の設定:
+```
 REGION_AWS_CONFIG="${AWS_DEFAULT_REGION}"
 
 FILE_USER_CONFIG="${HOME}/.aws/source/${GITUSER}.config"
@@ -1187,17 +1200,26 @@ aws configure list | grep profile
 ```
 cat << ETX
 
-        new:     IAM_USER_NAME:       ${GITUSER}
+        IAM_USER_NAME:       ${GITUSER}
 
 ETX
 ```
 
+```
+
+        IAM_USER_NAME:       git-user
+
+```
 
 ユーザの切り替え
 
 ```
 export AWS_DEFAULT_PROFILE=${GITUSER}
 echo ${AWS_DEFAULT_PROFILE}
+```
+
+```
+git-user
 ```
 
 確認
@@ -1226,7 +1248,7 @@ aws codecommit list-repositories
     "repositories": [
         {
             "repositoryName": "my-demo-repo",
-            "repositoryId": "53b8501f-f5df-47c7-bee0-817624ad8677"
+            "repositoryId": "********-****-****-****-************"
         }
     ]
 }
@@ -1325,6 +1347,180 @@ Total 3 (delta 0), reused 0 (delta 0)
 remote:
 To https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-demo-repo
    bf9fca4..53092be  master -> master
+```
+
+# その他のコマンド
+
+## リポジトリ名の変更
+
+現状の確認
+
+```
+aws codecommit
+```
+
+```
+
+```
+
+
+変更後のリポジトリ名を決定
+
+```
+
+```
+
+```
+
+```
+
+
+変更
+
+```
+
+```
+
+```
+
+```
+
+
+変更結果の確認
+
+```
+
+```
+
+```
+
+```
+
+
+## リポジトリの説明の変更
+
+現状の確認
+
+```
+
+```
+
+```
+
+```
+
+
+変更後のリポジトリ名を決定
+
+```
+
+```
+
+```
+
+```
+
+
+変更
+
+```
+
+```
+
+```
+
+```
+
+
+変更結果の確認
+
+```
+
+```
+
+```
+
+```
+
+
+## デフォルトブランチの変更
+
+現状の確認
+
+```
+
+```
+
+```
+
+```
+
+
+変更後のリポジトリ名を決定
+
+```
+
+```
+
+```
+
+```
+
+
+変更
+
+```
+
+```
+
+```
+
+```
+
+
+変更結果の確認
+
+```
+
+```
+
+```
+
+```
+
+
+### 動作確認（リポジトリのクローン）
+
+ディレクトリの作成
+
+```
+
+```
+
+```
+
+```
+
+
+クローン
+
+```
+
+```
+
+```
+
+```
+
+
+確認
+
+```
+
+```
+
+```
+
 ```
 
 
