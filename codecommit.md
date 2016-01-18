@@ -237,7 +237,7 @@ ETX
 
 ```
 ls ~/.ssh/config.old
-sudo cp ~/.ssh/config ~/.ssh/config.old
+cp ~/.ssh/config ~/.ssh/config.old
 ```
 
 設定ファイルを作成します。
